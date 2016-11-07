@@ -4,6 +4,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/cudaimgproc.hpp"
 #include "opencv2/cudawarping.hpp"
+#include <sys/time.h>
 
 using namespace std;
 using namespace cv;
@@ -37,20 +38,34 @@ int main() {
       }
     }
 
+    struct timeval start, stop;
+    gettimeofday(&start, NULL);
     remap(src, dst, xmap, ymap, interpolation, borderMode);
+    gettimeofday(&stop, NULL);
+    float elapse = stop.tv_sec - start.tv_sec + (stop.tv_usec - start.tv_usec) * 1e-6;
+    printf("cpu remap time: %f\n", elapse);
 
     char fname[256];
     std::sprintf(fname, "output_%d.jpg", size);
     imwrite(fname, dst);
 
+    gettimeofday(&start, NULL);
     d_src.upload(src);
     d_xmap.upload(xmap);
     d_ymap.upload(ymap);
+    gettimeofday(&stop, NULL);
+    elapse = stop.tv_sec - start.tv_sec + (stop.tv_usec - start.tv_usec) * 1e-6;
+    printf("gpu upload time: %f\n", elapse);
 
+    gettimeofday(&start, NULL);
     cuda::remap(d_src, d_dst, d_xmap, d_ymap, interpolation, borderMode);
 
     Mat cudst;
     d_dst.download(cudst);
+    gettimeofday(&stop, NULL);
+    elapse = stop.tv_sec - start.tv_sec + (stop.tv_usec - start.tv_usec) * 1e-6;
+    printf("gpu remap & download time: %f\n", elapse);
+
     std::sprintf(fname, "cuoutput_%d.jpg", size);
     imwrite(fname, cudst);
 
