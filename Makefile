@@ -1,5 +1,5 @@
 remap : test.cu
-	nvcc --compiler-bindir /usr/bin -g -G -O0 -o remap test.cu `pkg-config --cflags opencv` `pkg-config --libs opencv`
+	nvcc --compiler-bindir /usr/bin -O2 -o remap test.cu `pkg-config --cflags opencv` `pkg-config --libs opencv`
 
 clean:
 	rm -f remap
